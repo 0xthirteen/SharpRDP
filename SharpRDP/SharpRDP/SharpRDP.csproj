@@ -34,7 +34,7 @@
   <ItemGroup>
     <Reference Include="AxInterop.MSTSCLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>\AxInterop.MSTSCLib.dll</HintPath>
+      <HintPath>AxInterop.MSTSCLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
