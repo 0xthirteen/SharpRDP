@@ -2,10 +2,13 @@
 
 ### SharpRDP - Remote Desktop Protocol Console Application for Authenticated Command Execution
 
-```
+#### Building
 To compile open the project in Visual Studio and build for release. Two DLLs will be output to the Release directory, you do not need those because the DLLs are in the assembly.
-```
+If you do not want to use the provided DLLs you will need to .NET SDK to create the AxMSTSCLib.dll DLL. To create it you'll need to run aximp from the SDK on mstscax.dll. `%<SDK dir>%\aximp.exe %windir%\system32\mstscax.dll`. Those DLLs will need to be referenced by the project to get the Interop DLLs created.
+You will also need to compress the DLLs with Deflate and name them AxInterop.MSTSCLib.dll.bin and Interop.MSTSCLib.dll.bin
 
+
+#### Usage
 ```
 Regular RDP connection and execution
   SharpRDP.exe computername=target.domain command="C:\Temp\file.exe" username=domain\user password=password
@@ -20,6 +23,7 @@ Exec program as child process of cmd or powershell
 Use restricted admin mode
   SharpRDP.exe computername=target.domain command="C:\Temp\file.exe"
 ```
+
 If restricted admin mode is enabled on the target do not specify any credentials and it will use the current user context. Can `PTH` or `make_token` in beacon or `runas /netonly` on a windows system.
 
 All execution starts with the Windows run dialog (Win+R). There will be a registry key created at `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU` with the command that you executed. If you want to remove this you can use: [CleanRunMRU: Get or clear RunMRU values](https://github.com/0xthirteen/CleanRunMRU)
