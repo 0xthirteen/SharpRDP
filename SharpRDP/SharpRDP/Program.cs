@@ -48,6 +48,7 @@ namespace SharpRDP
             string password = string.Empty;
             string command = string.Empty;
             string execw = "";
+            bool privileged = false;
 
             if (arguments.ContainsKey("username"))
             {
@@ -93,10 +94,15 @@ namespace SharpRDP
                         execw = "powershell";
                     }
                 }
+                if (arguments["privileged"] == "True")
+                {
+                    Console.WriteLine("[+] Privileged mode enabled");
+                    privileged = true;
+                }
                 string[] computerNames = arguments["computername"].Split(',');
                 foreach (string server in computerNames)
                 {
-                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw);
+                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw, privileged);
                 }
             }
             else
