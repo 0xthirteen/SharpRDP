@@ -154,6 +154,10 @@ namespace SharpRDP
 
                 Thread.Sleep(500);
                 SendText("exit");
+
+                SendElement(enterdown);
+                Thread.Sleep(500);
+                SendElement(enterup);
             }
             else if (execwith == "powershell" || execwith == "ps")
             {
@@ -176,6 +180,10 @@ namespace SharpRDP
 
                 Thread.Sleep(500);
                 SendText("exit");
+
+                SendElement(enterdown);
+                Thread.Sleep(500);
+                SendElement(enterup);
             }
             else
             {
