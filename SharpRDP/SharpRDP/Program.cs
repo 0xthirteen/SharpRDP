@@ -13,11 +13,21 @@ namespace SharpRDP
             Console.WriteLine("SharpRDP");
             Console.WriteLine("");
             Console.WriteLine("  Regular RDP Connection");
-            Console.WriteLine("    SharpRDP.exe computername=192.168.1.1 command=\"C:\\Temp\\file.exe\" username=domain\\user password=password");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password");
             Console.WriteLine("  Exec as child process of cmd or ps ");
-            Console.WriteLine("    SharpRDP.exe computername=192.168.1.1 command=\"C:\\Temp\\file.exe\" username=domain\\user password=password exec=cmd");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password exec=cmd");
             Console.WriteLine("  Use restricted admin mode");
-            Console.WriteLine("    SharpRDP.exe computername=192.168.1.1 command=\"C:\\Temp\\file.exe\"");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\"");
+            Console.WriteLine("  Connect first host drives");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"\\\\tsclient\\C\\Temp\\file.exe\" username=domain\\user password=password connectdrive=true");
+            Console.WriteLine("  Ask to take over RDP session if another used is logged in (workstation)");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password takeover=true");
+            Console.WriteLine("  Network level authentication");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password nla=true");
+            Console.WriteLine("  Execute command elevated through Run Dialog");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=winr");
+            Console.WriteLine("  Execute command elevated through task manager");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=taskmgr");
         }
         static void Main(string[] args)
         {
@@ -47,8 +57,12 @@ namespace SharpRDP
             string domain = string.Empty;
             string password = string.Empty;
             string command = string.Empty;
+            string execElevated = string.Empty;
             string execw = "";
-
+            bool connectdrive = false;
+            bool takeover = false;
+            bool nla = false;
+            
             if (arguments.ContainsKey("username"))
             {
                 if (!arguments.ContainsKey("password"))
@@ -93,10 +107,46 @@ namespace SharpRDP
                         execw = "powershell";
                     }
                 }
+                if (arguments.ContainsKey("elevated"))
+                {
+                    if(arguments["elevated"].ToLower() == "true" || arguments["elevated"].ToLower() == "win+r" || arguments["elevated"].ToLower() == "winr")
+                    {
+                        execElevated = "winr";
+                    }
+                    else if(arguments["elevated"].ToLower() == "taskmgr" || arguments["elevated"].ToLower() == "taskmanager")
+                    {
+                        execElevated = "taskmgr";
+                    }
+                    else
+                    {
+                        execElevated = string.Empty;
+                    }
+                }
+                if (arguments.ContainsKey("connectdrive"))
+                {
+                    if(arguments["connectdrive"].ToLower() == "true")
+                    {
+                        connectdrive = true;
+                    }
+                }
+                if (arguments.ContainsKey("takeover"))
+                {
+                    if (arguments["takeover"].ToLower() == "true")
+                    {
+                        takeover = true;
+                    }
+                }
+                if (arguments.ContainsKey("nla"))
+                {
+                    if (arguments["nla"].ToLower() == "true")
+                    {
+                        nla = true;
+                    }
+                }
                 string[] computerNames = arguments["computername"].Split(',');
                 foreach (string server in computerNames)
                 {
-                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw);
+                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw, execElevated, connectdrive, takeover, nla);
                 }
             }
             else
