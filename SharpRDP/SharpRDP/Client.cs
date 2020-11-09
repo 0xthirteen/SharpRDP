@@ -129,7 +129,10 @@ namespace SharpRDP
                     rdpConnection.UserName = user;
                     rdpConnection.AdvancedSettings9.allowBackgroundInput = 1;
                     rdpConnection.AdvancedSettings9.BitmapPersistence = 0;
-                    rdpConnection.AdvancedSettings5.RedirectDrives = true;
+                    if (condrive == true)
+                    {
+                        rdpConnection.AdvancedSettings5.RedirectDrives = true;
+                    }
                     if (password != string.Empty || user != string.Empty)
                     {
                         rdpConnection.UserName = user;
