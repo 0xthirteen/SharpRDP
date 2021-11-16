@@ -279,8 +279,8 @@ namespace SharpRDP
                 Thread.Sleep(500);
             }
 
-            Console.WriteLine("[+] Executing {0}", cmd.ToLower());
-            SendText(cmd.ToLower());
+            Console.WriteLine("[+] Executing {0}", cmd);
+            SendText(cmd);
             Thread.Sleep(1000);
 
             if (runtype == "taskmgr")
@@ -358,7 +358,7 @@ namespace SharpRDP
                 Thread.Sleep(500);
             }
 
-            Console.WriteLine("[+] Executing {0} from {1}", cmd.ToLower(), consoletype);
+            Console.WriteLine("[+] Executing {0} from {1}", cmd, consoletype);
             SendText(consoletype);
             Thread.Sleep(1000);
 
@@ -391,7 +391,7 @@ namespace SharpRDP
             }
 
             Thread.Sleep(500);
-            SendText(cmd.ToLower());
+            SendText(cmd);
 
             Thread.Sleep(1000);
 
@@ -487,6 +487,33 @@ namespace SharpRDP
             keycode["y"] = new Code(new[] { false, true }, new[] { 0x15 });
             keycode["z"] = new Code(new[] { false, true }, new[] { 0x2c });
             keycode[" "] = new Code(new[] { false, true }, new[] { 0x39 });
+
+            keycode["A"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x1e });
+            keycode["B"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x30 });
+            keycode["C"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x2e });
+            keycode["D"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x20 });
+            keycode["E"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x12 });
+            keycode["F"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x21 });
+            keycode["G"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x22 });
+            keycode["H"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x23 });
+            keycode["I"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x17 });
+            keycode["J"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x24 });
+            keycode["K"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x25 });
+            keycode["L"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x26 });
+            keycode["M"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x32 });
+            keycode["N"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x31 });
+            keycode["O"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x18 });
+            keycode["P"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x19 });
+            keycode["Q"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x10 });
+            keycode["R"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x13 });
+            keycode["S"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x1f });
+            keycode["T"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x14 });
+            keycode["U"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x16 });
+            keycode["V"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x2f });
+            keycode["W"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x11 });
+            keycode["X"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x2d });
+            keycode["Y"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x15 });
+            keycode["Z"] = new Code(new[] { false, false, true, true }, new[] { 0x2a, 0x2c });
 
             keycode[","] = new Code(new[] { false, true }, new[] { 0x33 });
             keycode["."] = new Code(new[] { false, true }, new[] { 0x34 });
