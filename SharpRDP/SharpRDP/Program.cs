@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO.Compression;
 using System.Reflection;
 using System.Collections.Generic;
@@ -13,21 +13,33 @@ namespace SharpRDP
             Console.WriteLine("SharpRDP");
             Console.WriteLine("");
             Console.WriteLine("  Regular RDP Connection");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password");
-            Console.WriteLine("  Exec as child process of cmd or ps ");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password exec=cmd");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password");
+            Console.WriteLine("  Exec as child process of cmd or ps");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password exec=cmd");
             Console.WriteLine("  Use restricted admin mode");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\"");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\"");
             Console.WriteLine("  Connect first host drives");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"\\\\tsclient\\C\\Temp\\file.exe\" username=domain\\user password=password connectdrive=true");
-            Console.WriteLine("  Ask to take over RDP session if another used is logged in (workstation)");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password takeover=true");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"\\\\tsclient\\C\\Temp\\file.exe\" username=domain\\user password=password connectdrive=true");
+            Console.WriteLine("  Take over existing RDP session");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password takeover=true");
             Console.WriteLine("  Network level authentication");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password nla=true");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password nla=true");
             Console.WriteLine("  Execute command elevated through Run Dialog");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=winr");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=winr");
             Console.WriteLine("  Execute command elevated through task manager");
-            Console.WriteLine("    SharpRDP.exe computername=domain.target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=taskmgr");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password elevated=taskmgr");
+            Console.WriteLine("  Paste command via clipboard (faster, handles all characters)");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"C:\\Temp\\file.exe\" username=domain\\user password=password clipboard=true");
+            Console.WriteLine("  Custom RDP port");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password port=3390");
+            Console.WriteLine("  Delay multiplier for slow connections");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password delay=3");
+            Console.WriteLine("  Connection timeout (seconds)");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password timeout=30");
+            Console.WriteLine("  RDP Gateway");
+            Console.WriteLine("    SharpRDP.exe computername=internal.target command=\"whoami\" username=domain\\user password=password gateway=gw.domain.com");
+            Console.WriteLine("  Capture command output via drive redirect");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password connectdrive=true output=\\\\tsclient\\C\\temp\\out.txt");
         }
         static void Main(string[] args)
         {
@@ -37,11 +49,14 @@ namespace SharpRDP
                     new AssemblyName(argtwo.Name).Name);
                 var assembly = Assembly.GetExecutingAssembly();
                 using (var rs = assembly.GetManifestResourceStream(resourceName))
-                using (var zs = new DeflateStream(rs, CompressionMode.Decompress))
-                using (var ms = new MemoryStream())
                 {
-                    zs.CopyTo(ms);
-                    return Assembly.Load(ms.ToArray());
+                    if (rs == null) return null;
+                    using (var zs = new DeflateStream(rs, CompressionMode.Decompress))
+                    using (var ms = new MemoryStream())
+                    {
+                        zs.CopyTo(ms);
+                        return Assembly.Load(ms.ToArray());
+                    }
                 }
             };
 
@@ -58,11 +73,17 @@ namespace SharpRDP
             string password = string.Empty;
             string command = string.Empty;
             string execElevated = string.Empty;
-            string execw = "";
+            string execw = string.Empty;
             bool connectdrive = false;
             bool takeover = false;
             bool nla = false;
-            
+            bool clipboard = false;
+            int delayMultiplier = 1;
+            int timeout = 0;
+            int port = 3389;
+            string gateway = string.Empty;
+            string outputfile = string.Empty;
+
             if (arguments.ContainsKey("username"))
             {
                 if (!arguments.ContainsKey("password"))
@@ -94,37 +115,34 @@ namespace SharpRDP
             }
             if ((arguments.ContainsKey("computername")) && (arguments.ContainsKey("command")))
             {
-                Client rdpconn = new Client();
                 command = arguments["command"];
                 if (arguments.ContainsKey("exec"))
                 {
-                    if (arguments["exec"].ToLower() == "cmd")
+                    string ex = arguments["exec"].ToLower();
+                    if (ex == "cmd")
                     {
                         execw = "cmd";
                     }
-                    else if (arguments["exec"].ToLower() == "powershell" || arguments["exec"].ToLower() == "ps")
+                    else if (ex == "powershell" || ex == "ps")
                     {
                         execw = "powershell";
                     }
                 }
                 if (arguments.ContainsKey("elevated"))
                 {
-                    if(arguments["elevated"].ToLower() == "true" || arguments["elevated"].ToLower() == "win+r" || arguments["elevated"].ToLower() == "winr")
+                    string elev = arguments["elevated"].ToLower();
+                    if (elev == "true" || elev == "win+r" || elev == "winr")
                     {
                         execElevated = "winr";
                     }
-                    else if(arguments["elevated"].ToLower() == "taskmgr" || arguments["elevated"].ToLower() == "taskmanager")
+                    else if (elev == "taskmgr" || elev == "taskmanager")
                     {
                         execElevated = "taskmgr";
-                    }
-                    else
-                    {
-                        execElevated = string.Empty;
                     }
                 }
                 if (arguments.ContainsKey("connectdrive"))
                 {
-                    if(arguments["connectdrive"].ToLower() == "true")
+                    if (arguments["connectdrive"].ToLower() == "true")
                     {
                         connectdrive = true;
                     }
@@ -143,10 +161,44 @@ namespace SharpRDP
                         nla = true;
                     }
                 }
+                if (arguments.ContainsKey("clipboard"))
+                {
+                    if (arguments["clipboard"].ToLower() == "true")
+                    {
+                        clipboard = true;
+                    }
+                }
+                if (arguments.ContainsKey("delay"))
+                {
+                    int.TryParse(arguments["delay"], out delayMultiplier);
+                    if (delayMultiplier < 1) delayMultiplier = 1;
+                }
+                if (arguments.ContainsKey("timeout"))
+                {
+                    int.TryParse(arguments["timeout"], out timeout);
+                }
+                if (arguments.ContainsKey("port"))
+                {
+                    int.TryParse(arguments["port"], out port);
+                    if (port <= 0) port = 3389;
+                }
+                if (arguments.ContainsKey("gateway"))
+                {
+                    gateway = arguments["gateway"];
+                }
+                if (arguments.ContainsKey("output"))
+                {
+                    outputfile = arguments["output"];
+                }
                 string[] computerNames = arguments["computername"].Split(',');
                 foreach (string server in computerNames)
                 {
-                    rdpconn.CreateRdpConnection(server, username, domain, password, command, execw, execElevated, connectdrive, takeover, nla);
+                    string trimmed = server.Trim();
+                    if (string.IsNullOrEmpty(trimmed)) continue;
+                    Client rdpconn = new Client();
+                    rdpconn.CreateRdpConnection(trimmed, username, domain, password, command, execw,
+                        execElevated, connectdrive, takeover, nla, clipboard, delayMultiplier,
+                        timeout, port, gateway, outputfile);
                 }
             }
             else
