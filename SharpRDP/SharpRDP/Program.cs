@@ -40,6 +40,8 @@ namespace SharpRDP
             Console.WriteLine("    SharpRDP.exe computername=internal.target command=\"whoami\" username=domain\\user password=password gateway=gw.domain.com");
             Console.WriteLine("  Capture command output via drive redirect");
             Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password connectdrive=true output=\\\\tsclient\\C\\temp\\out.txt");
+            Console.WriteLine("  Bypass CredSSP fresh credential policy (enterprise AD environments)");
+            Console.WriteLine("    SharpRDP.exe computername=target command=\"whoami\" username=domain\\user password=password legacyauth=true");
         }
         static void Main(string[] args)
         {
@@ -83,6 +85,7 @@ namespace SharpRDP
             int port = 3389;
             string gateway = string.Empty;
             string outputfile = string.Empty;
+            bool legacyauth = false;
 
             if (arguments.ContainsKey("username"))
             {
@@ -190,6 +193,13 @@ namespace SharpRDP
                 {
                     outputfile = arguments["output"];
                 }
+                if (arguments.ContainsKey("legacyauth"))
+                {
+                    if (arguments["legacyauth"].ToLower() == "true")
+                    {
+                        legacyauth = true;
+                    }
+                }
                 string[] computerNames = arguments["computername"].Split(',');
                 foreach (string server in computerNames)
                 {
@@ -198,7 +208,7 @@ namespace SharpRDP
                     Client rdpconn = new Client();
                     rdpconn.CreateRdpConnection(trimmed, username, domain, password, command, execw,
                         execElevated, connectdrive, takeover, nla, clipboard, delayMultiplier,
-                        timeout, port, gateway, outputfile);
+                        timeout, port, gateway, outputfile, legacyauth);
                 }
             }
             else

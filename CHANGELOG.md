@@ -1,5 +1,11 @@
 # Changelog
 
+# 2026-08-03
+
+### Added
+
+* `legacyauth=true` bypass CredSSP "fresh credentials required" policy by disabling CredSSP and using legacy RDP security negotiation (fixes SL_ERR_FRESH_CRED_REQUIRED_BY_SERVER / error 8455 in enterprise AD environments)
+
 ## 2026-07-28
 
 ### Added

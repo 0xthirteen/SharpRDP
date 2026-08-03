@@ -23,6 +23,7 @@ namespace SharpRDP
         private bool takeover;
         private bool networkauth;
         private bool useclipboard;
+        private bool legacyauth;
         private int delaymult;
         private int connectTimeout;
         private int rdpport;
@@ -107,7 +108,7 @@ namespace SharpRDP
         public void CreateRdpConnection(string server, string user, string domain, string password,
             string command, string execw, string runelevated, bool condrive, bool tover, bool nla,
             bool clipboard = false, int delayMultiplier = 1, int timeout = 0, int port = 3389,
-            string gw = "", string outfile = "")
+            string gw = "", string outfile = "", bool legacy = false)
         {
             keycode = new Dictionary<string, Code>();
             KeyCodes();
@@ -119,6 +120,7 @@ namespace SharpRDP
             takeover = tover;
             networkauth = nla;
             useclipboard = clipboard;
+            legacyauth = legacy;
             delaymult = delayMultiplier < 1 ? 1 : delayMultiplier;
             connectTimeout = timeout > 0 ? timeout * 1000 : 0;
             rdpport = port;
@@ -168,10 +170,20 @@ namespace SharpRDP
                         rdpc2.set_Property("RestrictedLogon", true);
                         rdpc2.set_Property("DisableCredentialsDelegation", true);
                     }
-                    rdpConnection.AdvancedSettings9.EnableCredSspSupport = true;
-                    if (networkauth)
+                    if (legacyauth)
                     {
+                        // Bypass CredSSP entirely — avoids "fresh credentials required" policy
+                        // Server must accept non-NLA connections for this to work
+                        rdpConnection.AdvancedSettings9.EnableCredSspSupport = false;
                         rdpC.NegotiateSecurityLayer = true;
+                    }
+                    else
+                    {
+                        rdpConnection.AdvancedSettings9.EnableCredSspSupport = true;
+                        if (networkauth)
+                        {
+                            rdpC.NegotiateSecurityLayer = true;
+                        }
                     }
                     // RDP Gateway
                     if (!string.IsNullOrEmpty(gateway))
